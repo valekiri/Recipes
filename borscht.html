@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Borscht, step by step</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F8EEF1; --card:#FFFFFF; --ink:#2B1019; --muted:#7A5563; --line:#E6CFD7;
+  --beet:#8E1B4A; --beet-ink:#FFFFFF; --dill:#3E6B3B; --track:#E9D3DB;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1D0C14; --card:#2B1520; --ink:#F7E9EE; --muted:#C3A0AF; --line:#4A2635;
+    --beet:#E0628E; --beet-ink:#21090F; --dill:#8FC58A; --track:#4A2635; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1D0C14; --card:#2B1520; --ink:#F7E9EE; --muted:#C3A0AF; --line:#4A2635;
+  --beet:#E0628E; --beet-ink:#21090F; --dill:#8FC58A; --track:#4A2635; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 18px/1.5 Figtree,system-ui,sans-serif;min-height:100vh;padding-bottom:110px}
+.wrap{max-width:640px;margin:0 auto;padding:16px 18px}
+h1{font:700 28px/1.1 Fraunces,Georgia,serif;margin:6px 0 2px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 14px}
+.segs{display:flex;gap:5px;margin-bottom:14px}
+.segs button{flex:1;height:12px;border:0;border-radius:6px;background:var(--track);padding:0;cursor:pointer}
+.segs button.done{background:var(--dill)}
+.segs button.now{background:var(--beet)}
+.timer{display:none;align-items:center;gap:10px;background:var(--beet);color:var(--beet-ink);border-radius:14px;padding:10px 14px;margin-bottom:14px}
+.timer.on{display:flex}
+.timer b{font:700 26px Fraunces,Georgia,serif;flex:1;font-variant-numeric:tabular-nums}
+.timer button{background:transparent;color:inherit;border:2px solid currentColor;border-radius:10px;padding:6px 12px;font:600 15px Figtree,sans-serif;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 20px}
+.count{color:var(--muted);font-size:15px;margin:0 0 6px}
+h2{font:700 30px/1.15 Fraunces,Georgia,serif;margin:0 0 12px}
+.text{font:500 21px/1.5 Fraunces,Georgia,serif;margin:0 0 18px}
+.note{color:var(--dill);font-weight:600;font-size:16px;margin:0 0 18px}
+h3{font:600 16px Figtree,sans-serif;margin:0 0 8px;color:var(--muted)}
+ul{list-style:none;margin:0;padding:0}
+li label{display:flex;align-items:center;gap:14px;padding:12px 4px;border-top:1px solid var(--line);cursor:pointer;font-size:19px}
+li input{width:26px;height:26px;accent-color:var(--beet);flex:none}
+li input:checked + span{text-decoration:line-through;color:var(--muted)}
+.go{margin-top:16px;width:100%;border:2px solid var(--beet);background:transparent;color:var(--beet);border-radius:12px;padding:13px;font:600 18px Figtree,sans-serif;cursor:pointer}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:12px;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line)}
+.bar button{flex:1;height:60px;border-radius:14px;font:600 20px Figtree,sans-serif;cursor:pointer;border:2px solid var(--beet)}
+#back{background:transparent;color:var(--beet);flex:.6}
+#next{background:var(--beet);color:var(--beet-ink)}
+#back:disabled{opacity:.35}
+button:focus-visible,input:focus-visible{outline:3px solid var(--dill);outline-offset:2px}
+.end{text-align:center;padding:30px 10px}
+.end h2{font-size:34px}
+@media (prefers-reduced-motion:no-preference){.card{transition:opacity .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Borscht</h1>
+  <p class="sub">Tap the bar to jump between steps.</p>
+  <div class="segs" id="segs"></div>
+  <div class="timer" id="timer"><span>Timer</span><b id="tleft">0:00</b><button id="tplus">+5 min</button><button id="tstop">Stop</button></div>
+  <div class="card" id="card"></div>
+</div>
+<div class="bar"><button id="back">Back</button><button id="next">Next</button></div>
+
+<script>
+var STEPS=[
+ {t:"Cube the potatoes, shred the cabbage",x:"Cut the potatoes into 1 cm cubes. Shred the cabbage.",i:["1½ cups potatoes","2 cups cabbage"]},
+ {t:"Boil potatoes and cabbage",x:"Put both in a pot with the stock and water. Boil for 15–25 minutes.",i:["About 1 L stock","About 1 L water"],n:"You can start the next step while this boils.",m:15,l:"Start 15 min timer"},
+ {t:"Sweat the onion",x:"Chop the onion and sweat it in a pan with a bit of oil.",i:["1½ cups onion","A bit of oil"]},
+ {t:"Add the vegetables",x:"Stir the carrot, spices, celery and pepper into the onion.",i:["1 cup carrot, shredded","A bit of curry spice","2 celery sticks, chopped","¾ of a large pepper, chopped","Dried basil"]},
+ {t:"Add the tomato sauce",x:"Pour in the tomato sauce and cook until done, 15–20 minutes.",i:["1 can tomato sauce"],m:15,l:"Start 15 min timer"},
+ {t:"Combine and season",x:"Add the fried vegetable mix to the soup, season with salt, and let it cook together.",i:["Salt"]},
+ {t:"Add beets, garlic and herbs",x:"Just before the soup is done, add these.",i:["2 cups beets, shredded","2–3 garlic cloves","Parsley, chopped","Dill, chopped"]},
+ {t:"Bring to a boil, then stop",x:"Heat until it just reaches a boil, then turn off the heat immediately.",i:[]}
+];
+var cur=0, checked={}, tEnd=0, tick=null, finished=false;
+var $=function(id){return document.getElementById(id)};
+
+try{var s=JSON.parse(localStorage.getItem("borscht")||"{}");if(typeof s.cur==="number"&&s.cur<STEPS.length)cur=s.cur;if(s.checked)checked=s.checked;}catch(e){}
+function save(){try{localStorage.setItem("borscht",JSON.stringify({cur:cur,checked:checked}))}catch(e){}}
+
+function render(){
+  var segs=$("segs");segs.innerHTML="";
+  STEPS.forEach(function(_,k){
+    var b=document.createElement("button");
+    b.className=finished||k<cur?"done":(k===cur?"now":"");
+    b.setAttribute("aria-label","Go to step "+(k+1));
+    b.onclick=function(){finished=false;cur=k;save();render();window.scrollTo(0,0)};
+    segs.appendChild(b);
+  });
+  var card=$("card");
+  if(finished){
+    card.innerHTML='<div class="end"><h2>The borscht is ready</h2><p class="text">Let it rest a few minutes, then serve.</p><button class="go" id="again">Start over</button></div>';
+    $("again").onclick=function(){finished=false;cur=0;checked={};save();render();window.scrollTo(0,0)};
+    $("next").style.display="none";$("back").disabled=false;$("back").textContent="Back";
+    return;
+  }
+  $("next").style.display="";
+  var st=STEPS[cur];
+  var h='<p class="count">Step '+(cur+1)+' of '+STEPS.length+'</p><h2>'+st.t+'</h2><p class="text">'+st.x+'</p>';
+  if(st.n)h+='<p class="note">'+st.n+'</p>';
+  if(st.i.length){
+    h+='<h3>You need</h3><ul>';
+    st.i.forEach(function(it,k){
+      var key=cur+"-"+k;
+      h+='<li><label><input type="checkbox" data-k="'+key+'"'+(checked[key]?" checked":"")+'><span>'+it+'</span></label></li>';
+    });
+    h+='</ul>';
+  }
+  if(st.m)h+='<button class="go" id="tstart">'+st.l+'</button>';
+  card.innerHTML=h;
+  card.querySelectorAll("input").forEach(function(c){c.onchange=function(){checked[c.dataset.k]=c.checked;save()}});
+  if($("tstart"))$("tstart").onclick=function(){startTimer(st.m)};
+  $("back").disabled=cur===0;
+  $("next").textContent=cur===STEPS.length-1?"Finish":"Next";
+}
+
+function fmt(ms){var s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2)}
+function startTimer(min){tEnd=Date.now()+min*60000;$("timer").classList.add("on");run()}
+function run(){
+  clearInterval(tick);
+  tick=setInterval(function(){
+    var left=tEnd-Date.now();
+    $("tleft").textContent=fmt(left);
+    if(left<=0){clearInterval(tick);$("tleft").textContent="Time’s up";alarm()}
+  },250);
+  $("tleft").textContent=fmt(tEnd-Date.now());
+}
+function alarm(){
+  try{if(navigator.vibrate)navigator.vibrate([400,200,400,200,400])}catch(e){}
+  try{
+    var A=window.AudioContext||window.webkitAudioContext,a=new A(),n=0;
+    var beep=function(){var o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.value=.2;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.25);if(++n<4)setTimeout(beep,450)};
+    beep();
+  }catch(e){}
+}
+$("tplus").onclick=function(){tEnd=Math.max(tEnd,Date.now())+5*60000;run()};
+$("tstop").onclick=function(){clearInterval(tick);$("timer").classList.remove("on")};
+
+$("next").onclick=function(){
+  if(cur===STEPS.length-1){finished=true}else{cur++}
+  save();render();window.scrollTo(0,0);
+};
+$("back").onclick=function(){
+  if(finished){finished=false}else if(cur>0){cur--}
+  save();render();window.scrollTo(0,0);
+};
+
+async function keepAwake(){try{if(navigator.wakeLock)await navigator.wakeLock.request("screen")}catch(e){}}
+keepAwake();
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")keepAwake()});
+render();
+</script>
+</body>
+</html>
