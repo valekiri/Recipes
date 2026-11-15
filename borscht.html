@@ -54,18 +54,27 @@ li input:checked + span{text-decoration:line-through;color:var(--muted)}
 button:focus-visible,input:focus-visible{outline:3px solid var(--dill);outline-offset:2px}
 .end{text-align:center;padding:30px 10px}
 .end h2{font-size:34px}
+.bar[hidden]{display:none}
+.toplink{background:none;border:0;color:var(--beet);font:600 17px Figtree,sans-serif;text-decoration:underline;padding:6px 0;margin:0 0 8px;cursor:pointer}
+.ing li,.meth li{padding:10px 0;border-top:1px solid var(--line);font-size:19px}
+.meth{margin:0;padding-left:26px}
+.meth li{display:list-item;padding-left:4px}
+.ing li:first-child,.meth li:first-child{border-top:0}
+.cook{background:var(--beet);color:var(--beet-ink);height:60px;font-size:20px;margin-top:18px}
 @media (prefers-reduced-motion:no-preference){.card{transition:opacity .15s}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Borscht</h1>
-  <p class="sub">Tap the bar to jump between steps.</p>
+  <p class="sub" id="sub"></p>
+  <button class="toplink" id="toplink" hidden>← Full recipe</button>
+  <div class="full" id="full"></div>
   <div class="segs" id="segs"></div>
   <div class="timer" id="timer"><span>Timer</span><b id="tleft">0:00</b><button id="tplus">+5 min</button><button id="tstop">Stop</button></div>
   <div class="card" id="card"></div>
 </div>
-<div class="bar"><button id="back">Back</button><button id="next">Next</button></div>
+<div class="bar" id="bar"><button id="back">Back</button><button id="next">Next</button></div>
 
 <script>
 var STEPS=[
@@ -78,13 +87,40 @@ var STEPS=[
  {t:"Add beets, garlic and herbs",x:"Just before the soup is done, add these.",i:["2 cups beets, shredded","2–3 garlic cloves","Parsley, chopped","Dill, chopped"]},
  {t:"Bring to a boil, then stop",x:"Heat until it just reaches a boil, then turn off the heat immediately.",i:[]}
 ];
-var cur=0, checked={}, tEnd=0, tick=null, finished=false;
+var cur=0, checked={}, tEnd=0, tick=null, finished=false, mode="recipe";
+var METHOD=[
+ "Cube 1½ cups of potatoes (1 cm) and shred 2 cups of cabbage.",
+ "Boil the potatoes and cabbage in about 1 L of stock plus about 1 L of water for 15–25 minutes.",
+ "Meanwhile, chop 1½ cups of onion and sweat it in a pan with a bit of oil.",
+ "Add 1 cup of shredded carrot, a bit of curry spice, 2 chopped celery sticks, about ¾ of a large pepper (chopped), and dried basil.",
+ "Add 1 can of tomato sauce and cook until done, 15–20 minutes.",
+ "Add the fried vegetable mix to the soup and let it cook together. Add salt.",
+ "Just before it’s done, add 2 cups of shredded beets, 2–3 garlic cloves, and chopped parsley and dill.",
+ "Heat to a boil, then turn off the heat immediately."
+];
+function renderFull(){
+  var h='<div class="card"><h2>Ingredients</h2><ul class="ing">';
+  STEPS.forEach(function(s){s.i.forEach(function(x){h+='<li>'+x+'</li>'})});
+  h+='</ul></div><div class="card" style="margin-top:14px"><h2>Method</h2><ol class="meth">';
+  METHOD.forEach(function(x){h+='<li>'+x+'</li>'});
+  h+='</ol></div><button class="go cook" id="cook">Cook step by step</button>';
+  $("full").innerHTML=h;
+  $("cook").onclick=function(){mode="steps";render();window.scrollTo(0,0)};
+}
 var $=function(id){return document.getElementById(id)};
 
 try{var s=JSON.parse(localStorage.getItem("borscht")||"{}");if(typeof s.cur==="number"&&s.cur<STEPS.length)cur=s.cur;if(s.checked)checked=s.checked;}catch(e){}
 function save(){try{localStorage.setItem("borscht",JSON.stringify({cur:cur,checked:checked}))}catch(e){}}
 
 function render(){
+  var recipe=mode==="recipe";
+  $("full").style.display=recipe?"":"none";
+  $("segs").style.display=recipe?"none":"";
+  $("card").style.display=recipe?"none":"";
+  $("bar").hidden=recipe;
+  $("toplink").hidden=recipe;
+  $("sub").textContent=recipe?"The full recipe, then a step-by-step mode for cooking.":"Tap the bar to jump between steps.";
+  if(recipe){renderFull();return;}
   var segs=$("segs");segs.innerHTML="";
   STEPS.forEach(function(_,k){
     var b=document.createElement("button");
@@ -154,6 +190,7 @@ $("back").onclick=function(){
 async function keepAwake(){try{if(navigator.wakeLock)await navigator.wakeLock.request("screen")}catch(e){}}
 keepAwake();
 document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")keepAwake()});
+$("toplink").onclick=function(){mode="recipe";render();window.scrollTo(0,0)};
 render();
 </script>
 </body>
